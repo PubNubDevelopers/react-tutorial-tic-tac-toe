@@ -93,19 +93,19 @@ class Game extends React.Component {
     const current = history[this.state.currentStepNumber];
     const { winner, winnerRow } = calculateWinner(current.squares);
 
-    const moves = history.map((step, move) => {
-      const currentLocation = step.currentLocation ? `(${step.currentLocation})` : '';
-      const desc = step.stepNumber ? `Go to move #${step.stepNumber}` : 'Go to game start';
-      const classButton = move === this.state.currentStepNumber ? 'button--green' : '';
+    // const moves = history.map((step, move) => {
+    //   const currentLocation = step.currentLocation ? `(${step.currentLocation})` : '';
+    //   const desc = step.stepNumber ? `Go to move #${step.stepNumber}` : 'Go to game start';
+    //   const classButton = move === this.state.currentStepNumber ? 'button--green' : '';
 
-      return (
-        <li key={step.stepNumber}>
-          <button className={`${classButton} button`} onClick={() => this.jumpTo(move)}>
-            {`${desc} ${currentLocation}`}
-          </button>
-        </li>
-      );
-    });
+    //   return (
+    //     <li key={step.stepNumber}>
+    //       <button className={`${classButton} button`} onClick={() => this.jumpTo(move)}>
+    //         {`${desc} ${currentLocation}`}
+    //       </button>
+    //     </li>
+    //   );
+    // });
 
     let status;
     if (winner) {
@@ -127,10 +127,6 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
-          <button className="button" onClick={() => this.sortMoves()}>
-            Sort moves
-          </button>
-          <ol>{moves}</ol>
         </div>
       </div>
     );
