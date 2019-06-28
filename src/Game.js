@@ -51,21 +51,17 @@ class Game extends React.Component {
       subscribeKey: "sub-c-ed355780-93bd-11e9-9769-e24cdeae5ee1"
     });
     this.state = {
-      // history: [
-      //   {
-      //     squares: Array(9).fill(''),
-      //   },
-      // ],
       squares: Array(9).fill(''),
       currentStepNumber: 0,
       myTurn: false,
-      username: 'Player 1',
+      username: '',
       rival_username: 'Player 2',
       is_playing: false,
       is_waiting: false,
       is_room_creator: false,
       value: '',
-      input: ''
+      input: '',
+      isDisabled: false
     };
 
     // this.historyCopy = this.state.history;
@@ -112,18 +108,15 @@ class Game extends React.Component {
         this.setState({
           is_waiting: false,
           is_playing: true,
-          rival_username: this.state.rival_username
+          rival_username: this.state.rival_username,
+          input: '',
+          username: ''
           // rival_username: data.username
         });  
+        console.log(this.state.input);
         console.log(this.state.is_playing);          
       } 
     });
-
-    // if(this.channel != null){
-    //   this.pubnub.getMessage(this.channel, (msg) => {
-    //     console.log(msg);
-    //   });      
-    // }
   }
 
   componentDidUpdate(){
@@ -131,29 +124,16 @@ class Game extends React.Component {
       // console.log(msg);
       if(msg.message.restart){
         this.setState({
-          squares: Array(9).fill('')
+          squares: Array(9).fill(''),
+          myTurn: false
         });
 
-
-        this.myTurn = false;
+        this.turn = 'X';
       }
 
 			if(msg.message.piece === 'X'){
         console.log(msg);
         this.convertToCoords(msg.message.row_index, msg.message.index);
-
-				// let moves = this.state.moves;
-				// let id = this.ids[msg.message.row_index][msg.message.index];
-				// console.log(id);
-				// moves[id] = msg.message.piece;
-				// console.log(moves[id]);
-				
-				// this.setState({
-				// 	moves
-				// });
-
-				// this.updateScores.call(this, moves);
-        // this.turn = 'X';
       }
     });
   }
@@ -167,24 +147,42 @@ class Game extends React.Component {
   joinRoom = () => {
     this.channel = 'tictactoe--' + this.state.input;
     console.log(this.channel);
-    this.pubnub.subscribe({
-      channels: [this.channel],
-      withPresence: true
-    });
     
-    this.pubnub.publish({
-      message: {
-        readyToPlay: true,
-        not_room_creator: true,
-      },
-      channel: 'gameLobby'
+    // Check the number of people in the channel
+    this.pubnub.hereNow({
+      channels: [this.channel], 
+      includeUUIDs: true,
+      includeState: true
+    }).then((response) => { 
+        console.log(response);
+        if(response.totalOccupancy < 2){
+          console.log(response.totalOccupancy);
+          this.pubnub.subscribe({
+            channels: [this.channel],
+            withPresence: true
+          });
+          
+          this.pubnub.publish({
+            message: {
+              readyToPlay: true,
+              not_room_creator: true,
+              username: this.state.username
+            },
+            channel: 'gameLobby'
+          });
+          console.log('published');
+      
+          this.setState({
+            is_waiting: true,
+            // is_playing: true
+          });     
+        } 
+        else{
+          console.log('lobby full')
+        }
+    }).catch((error) => { 
+        console.log(error)
     });
-    console.log('published');
-
-    this.setState({
-      is_waiting: true,
-      // is_playing: true
-    }); 
   }
 
   handleChange = (event) => {
@@ -193,17 +191,25 @@ class Game extends React.Component {
 
   handleSubmit = (event) => {
     console.log(this.state.input);
-    this.joinRoom();
+    if(this.state.input === ''){
+      alert('Input field is empty!');
+    }
+  
+    else if(this.state.username === ''){
+      alert('Username field is empty!');
+    }
+
+    else{
+      // isDisabled
+      this.joinRoom();
+    }
+  }
+
+  addUsername = (event) => {
+    this.setState({username: event.target.value});
   }
 
   putOnBoard(i) {
-    // console.log(this.turn);
-    // console.log(this.piece);
-
-    // const history = this.state.history.slice(0, this.state.currentStepNumber + 1);
-    // const current = history[history.length - 1];
-    // const squares = current.squares.slice();
-
     const squares = this.state.squares;
     console.log(squares);
 
@@ -212,14 +218,8 @@ class Game extends React.Component {
     }
     squares[i] = this.state.myTurn ? 'O' : 'X';
     this.setState({
-      // history: history.concat([
-      //   {
-      //     squares,
-      //   },
-      // ]),
       squares: squares,
       myTurn: !this.state.myTurn,
-      // currentStepNumber: history.length,
     });
 
     // console.log(getLocation(i));
@@ -239,12 +239,7 @@ class Game extends React.Component {
 
     console.log(this.state.myTurn);
     if(this.state.myTurn){
-      // const history = this.state.history.slice(0, this.state.currentStepNumber + 1);
-      // const current = history[history.length - 1];
-      // const squares = current.squares.slice();
-
       const squares = this.state.squares;
-
   
       if (calculateWinner(squares).winner || squares[i]) {
         return;
@@ -281,27 +276,16 @@ class Game extends React.Component {
 
   render() {
     console.log(this.state.is_playing);
-    // this.room_id = window.prompt("Enter room id");
-    // if(this.room_id != null){
-    //   this.joinRoom();
-    // }
-    // console.log(this.room_id);
-    // const { history } = this.state;
-    // console.log(history);
-    // let historyCopy = this.state.history;
-    // console.log(historyCopy);
-    // const current = history[this.state.currentStepNumber];
-    // console.log(current);
     const { winner, winnerRow } = calculateWinner(this.state.squares);
 
     let status;
     if (winner) {
       status = `Winner ${winner}`;
-    // } else if (squares.length === 10) {
-    //   status = 'Draw. No one won.';
+    } else if (squares.length === 9) {
+      status = 'Draw. No one won.';
     } 
     else {
-      status = `Next player: ${this.state.myTurn ? 'X' : 'O'}`;
+      status = `Current player: ${this.state.myTurn ? 'O' : 'X'}`;
     }
 
     return (
@@ -309,15 +293,6 @@ class Game extends React.Component {
         {/* <div>
           <h3>RN Tic-Tac-Toe</h3>
         </div>  */}
-
-        {/* {
-          !this.state.is_playing &&
-          <Lobby
-            joinRoom={this.joinRoom}
-          />            
-        } */}
-
-
   
           <Board
             squares={this.state.squares}
@@ -327,25 +302,28 @@ class Game extends React.Component {
 
           <div className="game-info">{status}</div>    
 
-          <div className="input-field">
-              <input type="text" onChange={ this.handleChange } />
+          <div className="join-field">
+              <input 
+                type="text" 
+                onChange={ this.handleChange }
+                placeholder="Enter the room name"
+                />
               <input
                 type="button"
+                disabled={this.state.isDisabled}
                 value="Submit"
+                placeholder="Enter the room name"
                 onClick={this.handleSubmit}
               />
         </div>     
 
-        {/* <div className="input-field">
-          <form onSubmit={this.joinRoom}>
-              <label>
-                Name of lobby:
-                <input type="text" value={this.state.value} onChange={this.handleChange} />
-              </label>
-              <input type="submit" value="Submit" />
-          </form>
-        </div>   */}
-
+        <div className="username-field">
+              <input 
+                type="text" 
+                onChange={ this.addUsername } 
+                placeholder="Enter your username"
+                />
+        </div>   
       </div>
     );
   }

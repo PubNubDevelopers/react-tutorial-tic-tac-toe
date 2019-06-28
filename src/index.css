@@ -54,8 +54,12 @@ ul {
   margin-left: 40px;
 }
 
-.input-field{
+.join-field{
   margin-top: 50px;
+}
+
+.username-field{
+  margin-top: 70px;
 }
 
 .button {
