@@ -51,7 +51,11 @@ ul {
 }
 
 .game-info {
-  margin-left: 20px;
+  margin-left: 40px;
+}
+
+.input-field{
+  margin-top: 50px;
 }
 
 .button {
