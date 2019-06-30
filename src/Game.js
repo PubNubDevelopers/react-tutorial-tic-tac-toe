@@ -121,7 +121,7 @@ class Game extends React.Component {
 
   componentDidUpdate(){
     this.pubnub.getMessage(this.channel, (msg) => {
-      // console.log(msg);
+      console.log(msg);
       if(msg.message.restart){
         this.setState({
           squares: Array(9).fill(''),
@@ -200,7 +200,7 @@ class Game extends React.Component {
     }
 
     else{
-      // isDisabled
+      this.state.isDisabled = true;
       this.joinRoom();
     }
   }
@@ -217,6 +217,8 @@ class Game extends React.Component {
       return;
     }
     squares[i] = this.state.myTurn ? 'O' : 'X';
+    this.turn = (squares[i] === 'X')? 'O' : 'X';
+    console.log(this.turn);
     this.setState({
       squares: squares,
       myTurn: !this.state.myTurn,
@@ -259,14 +261,15 @@ class Game extends React.Component {
       console.log(row);
       console.log(col);
   
+      console.log(this.turn);
       this.turn = (this.turn === 'O') ? 'X' : 'O';
-      console.log('room creator: ' + this.room_creator);
+      console.log('room creator: ' + this.turn);
       this.pubnub.publish({
         message: {
           row_index: row,
           index: col,
           piece: this.piece,
-          room_creator: false,
+          is_room_creator: false,
           turn: this.turn
         },
         channel: this.channel
@@ -281,8 +284,8 @@ class Game extends React.Component {
     let status;
     if (winner) {
       status = `Winner ${winner}`;
-    } else if (squares.length === 9) {
-      status = 'Draw. No one won.';
+    // } else if (this.state.squares.length === 9) {
+    //   status = 'Draw. No one won.';
     } 
     else {
       status = `Current player: ${this.state.myTurn ? 'O' : 'X'}`;
@@ -321,7 +324,7 @@ class Game extends React.Component {
               <input 
                 type="text" 
                 onChange={ this.addUsername } 
-                placeholder="Enter your username"
+                placeholder="What's your name?"
                 />
         </div>   
       </div>
