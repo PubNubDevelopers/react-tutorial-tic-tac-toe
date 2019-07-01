@@ -52,10 +52,8 @@ class Game extends React.Component {
     });
     this.state = {
       squares: Array(9).fill(''),
-      currentStepNumber: 0,
       myTurn: false,
       username: '',
-      rival_username: 'Player 2',
       is_playing: false,
       is_waiting: false,
       is_room_creator: false,
@@ -81,58 +79,42 @@ class Game extends React.Component {
   }
 
   componentWillUnmount(){
-    console.log('unmounting');
     this.pubnub.unsubscribe({
       channels : [this.channel]
     });
   }
 
   componentWillMount(){
-    console.log('mounting');
     this.pubnub.subscribe({
       channels: ['gameLobby'],
       withPresence: true
     });
     this.pubnub.getMessage('gameLobby', (msg) => {
-      console.log(msg);
-      if(msg.message.is_room_creator){
-        console.log('room creator');
-      }
-      if(msg.message.not_room_creator){
-        console.log('starting game');
-    
+      if(msg.message.not_room_creator){    
         this.pubnub.unsubscribe({
           channels : ['gameLobby']
         }); 
-        console.log("unsub");
         this.setState({
           is_waiting: false,
           is_playing: true,
-          rival_username: this.state.rival_username,
-          input: '',
-          username: ''
-          // rival_username: data.username
         });  
-        console.log(this.state.input);
-        console.log(this.state.is_playing);          
       } 
     });
   }
 
   componentDidUpdate(){
     this.pubnub.getMessage(this.channel, (msg) => {
-      console.log(msg);
-      if(msg.message.restart){
+      if(msg.message.restart || msg.message.gameOver){
         this.setState({
           squares: Array(9).fill(''),
           myTurn: false
         });
 
         this.turn = 'X';
+        this.setState({isDisabled: false});
       }
 
 			if(msg.message.piece === 'X'){
-        console.log(msg);
         this.convertToCoords(msg.message.row_index, msg.message.index);
       }
     });
@@ -140,23 +122,17 @@ class Game extends React.Component {
 
   convertToCoords = (row, col) => {
     let getSquare = this.ids[row][col];
-    console.log(getSquare);
     this.putOnBoard(getSquare);
   }
 
   joinRoom = () => {
     this.channel = 'tictactoe--' + this.state.input;
-    console.log(this.channel);
     
     // Check the number of people in the channel
     this.pubnub.hereNow({
       channels: [this.channel], 
-      includeUUIDs: true,
-      includeState: true
     }).then((response) => { 
-        console.log(response);
         if(response.totalOccupancy < 2){
-          console.log(response.totalOccupancy);
           this.pubnub.subscribe({
             channels: [this.channel],
             withPresence: true
@@ -170,11 +146,9 @@ class Game extends React.Component {
             },
             channel: 'gameLobby'
           });
-          console.log('published');
       
           this.setState({
             is_waiting: true,
-            // is_playing: true
           });     
         } 
         else{
@@ -190,17 +164,16 @@ class Game extends React.Component {
   }
 
   handleSubmit = (event) => {
-    console.log(this.state.input);
-    if(this.state.input === ''){
-      alert('Input field is empty!');
+    if(this.state.username === ''){
+      alert('Username field is empty.');
     }
-  
-    else if(this.state.username === ''){
-      alert('Username field is empty!');
+
+    else if(this.state.input === ''){
+      alert('Enter the room name.');
     }
 
     else{
-      this.state.isDisabled = true;
+      this.setState({isDisabled: true});
       this.joinRoom();
     }
   }
@@ -211,14 +184,12 @@ class Game extends React.Component {
 
   putOnBoard(i) {
     const squares = this.state.squares;
-    console.log(squares);
 
     if (calculateWinner(squares).winner || squares[i]) {
       return;
     }
     squares[i] = this.state.myTurn ? 'O' : 'X';
     this.turn = (squares[i] === 'X')? 'O' : 'X';
-    console.log(this.turn);
     this.setState({
       squares: squares,
       myTurn: !this.state.myTurn,
@@ -228,18 +199,13 @@ class Game extends React.Component {
     let temp = getLocation(i);
     let row = temp.row;
     let col = temp.col;
-    console.log(row);
-    console.log(col);
-   
   }
 
   handleClick(i) {
     if(!this.state.is_playing){
-      console.log('cant click');
       return;
     }
 
-    console.log(this.state.myTurn);
     if(this.state.myTurn){
       const squares = this.state.squares;
   
@@ -252,18 +218,11 @@ class Game extends React.Component {
         myTurn: !this.state.myTurn,
       });
   
-      console.log(squares);
-      // console.log(getLocation(i));
       let temp = getLocation(i);
-      console.log(temp);
       let row = temp.row;
-      let col = temp.col;
-      console.log(row);
-      console.log(col);
-  
-      console.log(this.turn);
+      let col = temp.col;  
       this.turn = (this.turn === 'O') ? 'X' : 'O';
-      console.log('room creator: ' + this.turn);
+
       this.pubnub.publish({
         message: {
           row_index: row,
@@ -278,7 +237,6 @@ class Game extends React.Component {
   }
 
   render() {
-    console.log(this.state.is_playing);
     const { winner, winnerRow } = calculateWinner(this.state.squares);
 
     let status;
@@ -292,41 +250,37 @@ class Game extends React.Component {
     }
 
     return (
-      <div className="game">
-        {/* <div>
-          <h3>RN Tic-Tac-Toe</h3>
-        </div>  */}
-  
-          <Board
-            squares={this.state.squares}
-            winnerSquares={winnerRow}
-            onClick={i => this.handleClick(i)}
-          />            
+      <div className="game">  
+        <Board
+          squares={this.state.squares}
+          winnerSquares={winnerRow}
+          onClick={i => this.handleClick(i)}
+        />            
 
-          <div className="game-info">{status}</div>    
-
-          <div className="join-field">
-              <input 
-                type="text" 
-                onChange={ this.handleChange }
-                placeholder="Enter the room name"
-                />
-              <input
-                type="button"
-                disabled={this.state.isDisabled}
-                value="Submit"
-                placeholder="Enter the room name"
-                onClick={this.handleSubmit}
+        <div className="game-info">
+          <p>{status}</p> 
+          <div>
+            <input 
+              type="text" 
+              onChange={ this.addUsername } 
+              placeholder="Enter your username"
               />
-        </div>     
-
-        <div className="username-field">
-              <input 
-                type="text" 
-                onChange={ this.addUsername } 
-                placeholder="What's your name?"
-                />
-        </div>   
+          </div>
+          <div>
+            <input 
+              type="text" 
+              onChange={ this.handleChange }
+              placeholder="Enter the room name"
+              />
+            <input
+              className="buttonClass"
+              type="button"
+              disabled={this.state.isDisabled}
+              value="Submit"
+              onClick={this.handleSubmit}
+            />
+          </div>
+        </div>    
       </div>
     );
   }
