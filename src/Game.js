@@ -3,7 +3,6 @@ import Board from './Board';
 import PubNubReact from 'pubnub-react';
 
 const calculateWinner = (squares) => {
-  console.log(squares);
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -38,17 +37,15 @@ const getLocation = (move) => {
     8: {row: 2, col: 2},
   };
 
-  console.log(locationMap[move]);
   return locationMap[move];
 };
-
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
     this.pubnub = new PubNubReact({
-      publishKey: "pub-c-fc3066d1-e616-4a54-902b-1802388fdeaf",
-      subscribeKey: "sub-c-ed355780-93bd-11e9-9769-e24cdeae5ee1"
+      publishKey: "ENTER_YOUR_PUBLISH_KEY_HERE", 
+      subscribeKey: "ENTER_YOUR_SUBSCRIBE_KEY_HERE"    
     });
     this.state = {
       squares: Array(9).fill(''),
@@ -104,7 +101,7 @@ class Game extends React.Component {
 
   componentDidUpdate(){
     this.pubnub.getMessage(this.channel, (msg) => {
-      if(msg.message.restart || msg.message.gameOver){
+      if(msg.message.reset || msg.message.gameOver){
         this.setState({
           squares: Array(9).fill(''),
           myTurn: false
@@ -115,7 +112,7 @@ class Game extends React.Component {
       }
 
 			if(msg.message.piece === 'X'){
-        this.convertToCoords(msg.message.row_index, msg.message.index);
+        this.convertToCoords(msg.message.row, msg.message.col);
       }
     });
   }
@@ -194,11 +191,6 @@ class Game extends React.Component {
       squares: squares,
       myTurn: !this.state.myTurn,
     });
-
-    // console.log(getLocation(i));
-    let temp = getLocation(i);
-    let row = temp.row;
-    let col = temp.col;
   }
 
   handleClick(i) {
@@ -225,8 +217,8 @@ class Game extends React.Component {
 
       this.pubnub.publish({
         message: {
-          row_index: row,
-          index: col,
+          row: row,
+          col: col,
           piece: this.piece,
           is_room_creator: false,
           turn: this.turn
@@ -242,8 +234,6 @@ class Game extends React.Component {
     let status;
     if (winner) {
       status = `Winner ${winner}`;
-    // } else if (this.state.squares.length === 9) {
-    //   status = 'Draw. No one won.';
     } 
     else {
       status = `Current player: ${this.state.myTurn ? 'O' : 'X'}`;
