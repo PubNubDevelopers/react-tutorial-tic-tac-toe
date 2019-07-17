@@ -1,10 +1,9 @@
 body {
-  font: 24px 'Century Gothic', Futura, sans-serif;
+  font: 22px "Century Gothic", Futura, sans-serif;
   margin: 20px;
 }
 
-ol,
-ul {
+ol, ul {
   padding-left: 30px;
 }
 
@@ -16,18 +15,9 @@ p {
   margin-inline-end: 0px;
 }
 
-div {
-  display: block;
-  height: 25px;
-}
-
-.buttonClass{
-  margin-left: 0.5em;
-}
-
 .board-row:after {
   clear: both;
-  content: '';
+  content: "";
   display: table;
 }
 
@@ -50,8 +40,9 @@ div {
   width: 54px;
 }
 
-.square--green {
-  background: green;
+div {
+  display: block;
+  height: 25px;
 }
 
 .square:focus {
@@ -68,18 +59,41 @@ div {
 }
 
 .game-info {
-  margin-left: 40px;
+  margin-left: 20px;
 }
 
-.button {
-  background-color: #555555; /* Green */
-  border: none;
-  color: #fff;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 14px;
-  cursor: pointer;
+.square--green {
+  background: green;
+}
+
+.scores_container {
+  flex: 2;
+  flex-direction: row;
+  align-items: center;
+}
+
+.score {
+  flex: 1;
+  align-items: center;
+}
+
+.user_score {
+  font-size: 25;
+  font-weight: bold;
+  color: black;
+}
+
+.username {
+  font-size: 20;
+  color: black;
+}
+
+.buttonClass{
+  margin-left: 0.5em;
+}
+
+.square--green {
+  background: green;
 }
 
 .button--green {

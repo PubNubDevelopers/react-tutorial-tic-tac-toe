@@ -59,7 +59,6 @@ class Game extends React.Component {
       isDisabled: false
     };
 
-    // this.historyCopy = this.state.history;
     this.channel = null;
 
     this.room_id = null;
