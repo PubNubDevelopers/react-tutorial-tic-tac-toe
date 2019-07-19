@@ -45,8 +45,8 @@ npm start
 
 ## Build Your Own Realtime Tic Tac Toe Game in React Native
 
-To learn more about this project or if you want to build this project from scratch, check out the tutorial (coming soon).
+To learn more about this project or if you want to build this project from scratch, check out the tutorial.
 
-  <a href="https://www.pubnub.com/blog?devrel_gh=React_Native_TicTacToe">
+  <a href="https://www.pubnub.com/blog/multiplayer-mobile-tic-tac-toe-react-native-ios-android-part-one/?devrel_gh=react-native-tictactoe">
     <img alt="PubNub Blog" src="https://i.imgur.com/aJ927CO.png" width=260 height=98/>
   </a>
